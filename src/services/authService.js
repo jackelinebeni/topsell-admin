@@ -6,6 +6,8 @@ const authService = {
       email,
       password,
     });
+
+    console.log('Login response:', response.data); // Agrega este log para verificar la respuesta del servidor
     
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);

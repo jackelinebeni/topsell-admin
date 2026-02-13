@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, message, Tag, Descriptions } from 'antd';
-import { EyeOutlined, DeleteOutlined, CheckOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Modal, message, Tag, Descriptions, Input } from 'antd';
+import { EyeOutlined, DeleteOutlined, CheckOutlined, SearchOutlined } from '@ant-design/icons';
 import contactService from '../../services/contactService';
 
 const Contacts = () => {
@@ -26,11 +26,41 @@ const Contacts = () => {
     }
   };
 
+  // --- Helper para búsqueda en columnas ---
+  const getColumnSearchProps = (dataIndex, title) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Buscar ${title}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Buscar
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Reiniciar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) =>
+      record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
+  });
+
   const handleView = (record) => {
     setSelectedContact(record);
     setModalVisible(true);
-    
-    // Marcar como leído si no lo está
     if (!record.leido) {
       handleMarkAsRead(record.id);
     }
@@ -71,12 +101,18 @@ const Contacts = () => {
       dataIndex: 'id',
       key: 'id',
       width: 70,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Estado',
       dataIndex: 'leido',
       key: 'leido',
-      width: 100,
+      width: 110,
+      filters: [
+        { text: 'Leído', value: true },
+        { text: 'Nuevo', value: false },
+      ],
+      onFilter: (value, record) => record.leido === value,
       render: (leido) => (
         <Tag color={leido ? 'green' : 'orange'}>
           {leido ? 'Leído' : 'Nuevo'}
@@ -88,30 +124,35 @@ const Contacts = () => {
       dataIndex: 'nombres',
       key: 'nombres',
       width: 150,
+      ...getColumnSearchProps('nombres', 'nombres'),
     },
     {
       title: 'Apellidos',
       dataIndex: 'apellidos',
       key: 'apellidos',
       width: 150,
+      ...getColumnSearchProps('apellidos', 'apellidos'),
     },
     {
       title: 'Correo',
       dataIndex: 'correo',
       key: 'correo',
       width: 200,
+      ...getColumnSearchProps('correo', 'correo'),
     },
     {
       title: 'DNI/RUC',
       dataIndex: 'dniOrRuc',
       key: 'dniOrRuc',
       width: 120,
+      ...getColumnSearchProps('dniOrRuc', 'documento'),
     },
     {
       title: 'Razón Social',
       dataIndex: 'razonSocial',
       key: 'razonSocial',
       width: 180,
+      ...getColumnSearchProps('razonSocial', 'empresa'),
       render: (text) => text || '-',
     },
     {
@@ -119,6 +160,8 @@ const Contacts = () => {
       dataIndex: 'fechaCreacion',
       key: 'fechaCreacion',
       width: 180,
+      sorter: (a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion),
+      defaultSortOrder: 'descend', // Mostrar los más recientes primero
       render: (date) => new Date(date).toLocaleString('es-PE'),
     },
     {
@@ -142,7 +185,7 @@ const Contacts = () => {
               onClick={() => handleMarkAsRead(record.id)}
               size="small"
             >
-              Marcar leído
+              Marcar
             </Button>
           )}
           <Button

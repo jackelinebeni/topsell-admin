@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, Switch, InputNumber, message, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import bannerService from '../../services/bannerService';
 import ImageUpload from '../../components/ImageUpload';
 
@@ -28,6 +28,7 @@ const Banners = () => {
     }
   };
 
+  // --- Lógica de Handlers (Create, Edit, Delete, Submit) se mantiene igual ---
   const handleCreate = () => {
     setEditingBanner(null);
     form.resetFields();
@@ -78,17 +79,48 @@ const Banners = () => {
     }
   };
 
+  // --- Configuración de Columnas con Filtros ---
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id, // Ordenar por ID
     },
     {
       title: 'Título',
       dataIndex: 'title',
       key: 'title',
+      // Filtro de búsqueda por texto
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Buscar título"
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Buscar
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+              Reiniciar
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record) =>
+        record.title.toString().toLowerCase().includes(value.toLowerCase()),
     },
     {
       title: 'Imagen',
@@ -110,12 +142,19 @@ const Banners = () => {
       dataIndex: 'sortOrder',
       key: 'sortOrder',
       width: 100,
+      sorter: (a, b) => a.sortOrder - b.sortOrder, // Ordenar por posición
     },
     {
       title: 'Activo',
       dataIndex: 'active',
       key: 'active',
-      width: 100,
+      width: 120,
+      // Filtro por selección (Sí/No)
+      filters: [
+        { text: 'Activo (Sí)', value: true },
+        { text: 'Inactivo (No)', value: false },
+      ],
+      onFilter: (value, record) => record.active === value,
       render: (active) => (
         <span style={{ color: active ? 'green' : 'red' }}>
           {active ? 'Sí' : 'No'}
@@ -194,9 +233,7 @@ const Banners = () => {
           <Form.Item
             name="imageUrl"
             label="Imagen del Banner"
-            rules={[
-              { required: true, message: 'Por favor suba una imagen' },
-            ]}
+            rules={[{ required: true, message: 'Por favor suba una imagen' }]}
           >
             <ImageUpload folder="banners" />
           </Form.Item>

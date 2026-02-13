@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, message, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import brandService from '../../services/brandService';
 import ImageUpload from '../../components/ImageUpload';
 
@@ -78,17 +78,49 @@ const Brands = () => {
     }
   };
 
+  // --- Configuración de Columnas ---
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id, // Ordenar por ID numérico
     },
     {
       title: 'Nombre',
       dataIndex: 'name',
       key: 'name',
+      // Filtro de búsqueda por texto para el nombre
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Buscar marca"
+            value={selectedKeys[0]}
+            onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Buscar
+            </Button>
+            <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+              Limpiar
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+      onFilter: (value, record) =>
+        record.name.toString().toLowerCase().includes(value.toLowerCase()),
+      sorter: (a, b) => a.name.localeCompare(b.name), // Ordenar alfabéticamente
     },
     {
       title: 'Logo',

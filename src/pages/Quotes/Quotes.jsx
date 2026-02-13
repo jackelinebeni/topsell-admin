@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, Descriptions, Tag, message } from 'antd';
-import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Space, Modal, Descriptions, Tag, message, Input } from 'antd';
+import { EyeOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import quoteService from '../../services/quoteService';
 
 const Quotes = () => {
@@ -25,6 +25,38 @@ const Quotes = () => {
       setLoading(false);
     }
   };
+
+  // --- Helper para búsqueda ---
+  const getColumnSearchProps = (dataIndex, title) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Buscar ${title}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Buscar
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Reiniciar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) =>
+      record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
+  });
 
   const handleViewDetails = async (record) => {
     try {
@@ -63,11 +95,14 @@ const Quotes = () => {
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Fecha',
       dataIndex: 'date',
       key: 'date',
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+      defaultSortOrder: 'descend',
       render: (date) => new Date(date).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
@@ -80,22 +115,31 @@ const Quotes = () => {
       title: 'Cliente',
       dataIndex: 'userName',
       key: 'userName',
+      ...getColumnSearchProps('userName', 'cliente'),
+      sorter: (a, b) => a.userName.localeCompare(b.userName),
     },
     {
       title: 'Email',
       dataIndex: 'userEmail',
       key: 'userEmail',
+      ...getColumnSearchProps('userEmail', 'email'),
     },
     {
       title: 'Total',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
+      sorter: (a, b) => a.totalAmount - b.totalAmount,
       render: (amount) => `$${amount.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     },
     {
       title: 'Productos',
       dataIndex: 'items',
       key: 'items',
+      filters: [
+        { text: '1 producto', value: 1 },
+        { text: 'Más de 1', value: 2 },
+      ],
+      onFilter: (value, record) => value === 1 ? record.items.length === 1 : record.items.length > 1,
       render: (items) => (
         <Tag color="blue">{items.length} {items.length === 1 ? 'producto' : 'productos'}</Tag>
       ),
@@ -123,6 +167,7 @@ const Quotes = () => {
     },
   ];
 
+  // Columnas para la tabla dentro del modal (se mantienen sin filtros por ser vista detalle)
   const itemColumns = [
     {
       title: 'Producto',

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, message, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import categoryService from '../../services/categoryService';
 import ImageUpload from '../../components/ImageUpload';
 
@@ -30,6 +30,43 @@ const Categories = () => {
     }
   };
 
+  // --- Funciones auxiliares de búsqueda (Reutilizables) ---
+  const getColumnSearchProps = (dataIndex, title) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Buscar ${title}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Buscar
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Limpiar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex]
+        ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+        : '',
+  });
+
+  // --- Handlers (Create, Edit, Delete, Submit, Slug) se mantienen igual ---
   const handleCreate = () => {
     setEditingCategory(null);
     form.resetFields();
@@ -38,7 +75,6 @@ const Categories = () => {
 
   const handleEdit = (record) => {
     setEditingCategory(record);
-    // Convertir subCategories array de objetos a string si existe
     const formData = {
       ...record,
       subCategories: record.subCategories 
@@ -88,18 +124,13 @@ const Categories = () => {
 
   const handleSubmit = async (values) => {
     try {
-      // Convertir subCategories de string a array de objetos
       const subCategoriesArray = values.subCategories 
         ? values.subCategories.split(',').map(s => s.trim()).filter(s => s)
         : [];
       
       const subCategoriesObjects = subCategoriesArray.map(name => ({
         name: name,
-        slug: name.toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '')
+        slug: generateSlug(name)
       }));
 
       const categoryData = {
@@ -107,7 +138,6 @@ const Categories = () => {
         subCategories: subCategoriesObjects
       };
       
-      console.log('Submitting category data:', categoryData);
       if (editingCategory) {
         await categoryService.update(editingCategory.id, categoryData);
         message.success('Categoría actualizada exitosamente');
@@ -124,22 +154,27 @@ const Categories = () => {
     }
   };
 
+  // --- Definición de Columnas con Filtros ---
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Nombre',
       dataIndex: 'name',
       key: 'name',
+      ...getColumnSearchProps('name', 'nombre'),
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: 'Slug',
       dataIndex: 'slug',
       key: 'slug',
+      ...getColumnSearchProps('slug', 'slug'),
     },
     {
       title: 'Imagen',
@@ -165,6 +200,13 @@ const Categories = () => {
       render: (subCats) => subCats && subCats.length > 0 
         ? subCats.map(sub => sub.name).join(', ') 
         : '-',
+      // Filtro simple para saber cuáles tienen subcategorías
+      filters: [
+        { text: 'Con Subcategorías', value: 'has' },
+        { text: 'Sin Subcategorías', value: 'none' },
+      ],
+      onFilter: (value, record) => 
+        value === 'has' ? record.subCategories?.length > 0 : !record.subCategories?.length,
     },
     {
       title: 'Acciones',

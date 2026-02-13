@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, InputNumber, Switch, Select, message, Image } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import productService from '../../services/productService';
 import categoryService from '../../services/categoryService';
 import brandService from '../../services/brandService';
@@ -55,6 +55,39 @@ const Products = () => {
     }
   };
 
+  // --- Helper para búsqueda por texto ---
+  const getColumnSearchProps = (dataIndex, title) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Buscar ${title}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Buscar
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Reiniciar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) =>
+      record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
+  });
+
+  // --- Handlers (Create, Edit, Delete, Submit, etc.) se mantienen igual ---
   const handleCreate = () => {
     setEditingProduct(null);
     form.resetFields();
@@ -81,7 +114,7 @@ const Products = () => {
       }
     }
     
-    // Manejar subCategoryId: puede venir como objeto o como ID directo
+    // Manejar subCategoryId
     let subCategoryId = null;
     if (record.subCategory) {
       subCategoryId = typeof record.subCategory === 'object' 
@@ -145,7 +178,6 @@ const Products = () => {
     } else {
       setSubCategories([]);
     }
-    // Limpiar la subcategoría seleccionada
     form.setFieldsValue({ subCategoryId: undefined });
   };
 
@@ -153,13 +185,11 @@ const Products = () => {
     try {
       const images = Array.isArray(values.imageUrl) ? values.imageUrl : [];
       
-      // La primera imagen es la principal, las demás son secundarias
       const mainImage = images.length > 0 ? images[0] : null;
       const secondaryImages = images.slice(1).map(url => ({
         imageUrl: url
       }));
       
-      // Construir el objeto producto según el formato del backend
       const productData = {
         name: values.name,
         slug: values.slug,
@@ -194,18 +224,22 @@ const Products = () => {
     }
   };
 
+  // --- Columnas con Filtros ---
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       width: 70,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Nombre',
       dataIndex: 'name',
       key: 'name',
       width: 200,
+      ...getColumnSearchProps('name', 'nombre'),
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: 'Imagen',
@@ -229,13 +263,26 @@ const Products = () => {
       dataIndex: 'price',
       key: 'price',
       width: 100,
+      sorter: (a, b) => a.price - b.price,
       render: (price) => `$${price?.toFixed(2)}`,
     },
     {
       title: 'Stock',
       dataIndex: 'stock',
       key: 'stock',
-      width: 80,
+      width: 90,
+      sorter: (a, b) => a.stock - b.stock,
+      filters: [
+        { text: 'Sin Stock (0)', value: 'zero' },
+        { text: 'Bajo Stock (<10)', value: 'low' },
+        { text: 'Con Stock (10+)', value: 'high' },
+      ],
+      onFilter: (value, record) => {
+        if (value === 'zero') return record.stock === 0;
+        if (value === 'low') return record.stock > 0 && record.stock < 10;
+        if (value === 'high') return record.stock >= 10;
+        return true;
+      },
     },
     {
       title: 'Características',
@@ -246,9 +293,12 @@ const Products = () => {
     },
     {
       title: 'Categoría',
-      dataIndex: ['category', 'name'],
+      dataIndex: ['category', 'name'], // Acceso anidado para visualización
       key: 'category',
       width: 120,
+      // Filtro dinámico basado en las categorías cargadas
+      filters: categories.map(c => ({ text: c.name, value: c.name })),
+      onFilter: (value, record) => record.category?.name === value,
     },
     {
       title: 'Subcategoría',
@@ -257,27 +307,33 @@ const Products = () => {
       width: 120,
       render: (subCategory) => {
         if (!subCategory) return '-';
-        // Si subCategory es un objeto, mostrar su nombre
         if (typeof subCategory === 'object' && subCategory.name) {
           return subCategory.name;
         }
-        // Si solo es un ID, mostrar el ID
         return typeof subCategory === 'number' ? `ID: ${subCategory}` : '-';
       },
     },
     {
       title: 'Marca',
-      dataIndex: ['brand', 'name'],
+      dataIndex: ['brand', 'name'], // Acceso anidado
       key: 'brand',
       width: 120,
+      // Filtro dinámico basado en las marcas cargadas
+      filters: brands.map(b => ({ text: b.name, value: b.name })),
+      onFilter: (value, record) => record.brand?.name === value,
     },
     {
       title: 'Destacado',
       dataIndex: 'featured',
       key: 'featured',
       width: 100,
+      filters: [
+        { text: 'Sí', value: true },
+        { text: 'No', value: false },
+      ],
+      onFilter: (value, record) => record.featured === value,
       render: (featured) => (
-        <span style={{ color: featured ? 'green' : 'gray' }}>
+        <span style={{ color: featured ? 'green' : 'gray', fontWeight: featured ? 'bold' : 'normal' }}>
           {featured ? 'Sí' : 'No'}
         </span>
       ),
@@ -287,6 +343,11 @@ const Products = () => {
       dataIndex: 'active',
       key: 'active',
       width: 80,
+      filters: [
+        { text: 'Activo', value: true },
+        { text: 'Inactivo', value: false },
+      ],
+      onFilter: (value, record) => record.active === value,
       render: (active) => (
         <span style={{ color: active ? 'green' : 'red' }}>
           {active ? 'Sí' : 'No'}

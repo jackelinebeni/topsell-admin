@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, Select, message } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import userService from '../../services/userService';
 
 const { Option } = Select;
@@ -29,6 +29,39 @@ const Users = () => {
     }
   };
 
+  // --- Helper para búsqueda en columnas (Reutilizable) ---
+  const getColumnSearchProps = (dataIndex, title) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      <div style={{ padding: 8 }}>
+        <Input
+          placeholder={`Buscar ${title}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => confirm()}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => confirm()}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Buscar
+          </Button>
+          <Button onClick={() => clearFilters()} size="small" style={{ width: 90 }}>
+            Limpiar
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    onFilter: (value, record) =>
+      record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '',
+  });
+
+  // --- Handlers (Create, Edit, Delete, Submit) ---
   const handleCreate = () => {
     setEditingUser(null);
     form.resetFields();
@@ -70,11 +103,9 @@ const Users = () => {
   const handleSubmit = async (values) => {
     try {
       if (editingUser) {
-        // Actualizar usuario existente
         await userService.update(editingUser.id, values);
         message.success('Usuario actualizado exitosamente');
       } else {
-        // Crear nuevo usuario
         await userService.create(values);
         message.success('Usuario creado exitosamente');
       }
@@ -88,27 +119,34 @@ const Users = () => {
     }
   };
 
+  // --- Definición de Columnas ---
   const columns = [
     {
       title: 'ID',
       dataIndex: 'id',
       key: 'id',
       width: 80,
+      sorter: (a, b) => a.id - b.id,
     },
     {
       title: 'Nombre',
       dataIndex: 'firstName',
       key: 'firstName',
+      ...getColumnSearchProps('firstName', 'nombre'),
+      sorter: (a, b) => a.firstName.localeCompare(b.firstName),
     },
     {
       title: 'Apellido',
       dataIndex: 'lastName',
       key: 'lastName',
+      ...getColumnSearchProps('lastName', 'apellido'),
+      sorter: (a, b) => a.lastName.localeCompare(b.lastName),
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      ...getColumnSearchProps('email', 'email'),
     },
     {
       title: 'Teléfono',
@@ -120,6 +158,11 @@ const Users = () => {
       dataIndex: 'role',
       key: 'role',
       width: 120,
+      filters: [
+        { text: 'ADMIN', value: 'ADMIN' },
+        { text: 'USER', value: 'USER' },
+      ],
+      onFilter: (value, record) => record.role === value,
       render: (role) => (
         <span style={{ 
           color: role === 'ADMIN' ? '#1890ff' : '#52c41a',
@@ -193,9 +236,7 @@ const Users = () => {
           <Form.Item
             name="firstName"
             label="Nombre"
-            rules={[
-              { required: true, message: 'Por favor ingrese el nombre' },
-            ]}
+            rules={[{ required: true, message: 'Por favor ingrese el nombre' }]}
           >
             <Input placeholder="Nombre del usuario" />
           </Form.Item>
@@ -203,9 +244,7 @@ const Users = () => {
           <Form.Item
             name="lastName"
             label="Apellido"
-            rules={[
-              { required: true, message: 'Por favor ingrese el apellido' },
-            ]}
+            rules={[{ required: true, message: 'Por favor ingrese el apellido' }]}
           >
             <Input placeholder="Apellido del usuario" />
           </Form.Item>
@@ -237,9 +276,7 @@ const Users = () => {
           <Form.Item
             name="phone"
             label="Teléfono"
-            rules={[
-              { required: true, message: 'Por favor ingrese el teléfono' },
-            ]}
+            rules={[{ required: true, message: 'Por favor ingrese el teléfono' }]}
           >
             <Input placeholder="Teléfono del usuario" />
           </Form.Item>
@@ -247,9 +284,7 @@ const Users = () => {
           <Form.Item
             name="role"
             label="Rol"
-            rules={[
-              { required: true, message: 'Por favor seleccione el rol' },
-            ]}
+            rules={[{ required: true, message: 'Por favor seleccione el rol' }]}
           >
             <Select placeholder="Seleccione un rol">
               <Option value="USER">USER</Option>
