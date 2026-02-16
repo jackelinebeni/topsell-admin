@@ -193,7 +193,7 @@ const Products = () => {
       const productData = {
         name: values.name,
         slug: values.slug,
-        longDescription: values.longDescription,
+        sku: values.sku,
         price: values.price,
         stock: values.stock,
         imageUrl: mainImage,
@@ -267,22 +267,11 @@ const Products = () => {
       render: (price) => `$${price?.toFixed(2)}`,
     },
     {
-      title: 'Stock',
-      dataIndex: 'stock',
-      key: 'stock',
+      title: 'SKU',
+      dataIndex: 'sku',
+      key: 'sku',
       width: 90,
-      sorter: (a, b) => a.stock - b.stock,
-      filters: [
-        { text: 'Sin Stock (0)', value: 'zero' },
-        { text: 'Bajo Stock (<10)', value: 'low' },
-        { text: 'Con Stock (10+)', value: 'high' },
-      ],
-      onFilter: (value, record) => {
-        if (value === 'zero') return record.stock === 0;
-        if (value === 'low') return record.stock > 0 && record.stock < 10;
-        if (value === 'high') return record.stock >= 10;
-        return true;
-      },
+      ...getColumnSearchProps('sku', 'SKU'),
     },
     {
       title: 'Características',
@@ -436,11 +425,11 @@ const Products = () => {
           </Form.Item>
 
           <Form.Item
-            name="longDescription"
-            label="Descripción"
-            rules={[{ required: true, message: 'Por favor ingrese la descripción' }]}
+            name="sku"
+            label="SKU"
+            rules={[{ required: true, message: 'Por favor ingrese el SKU' }]}
           >
-            <TextArea rows={4} placeholder="Descripción detallada del producto" />
+            <Input placeholder="SKU del producto" />
           </Form.Item>
 
           <Form.Item
