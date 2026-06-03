@@ -1,5 +1,14 @@
 import api from '../config/api';
 
+const isTokenExpired = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true; // token malformado
+  }
+};
+
 const authService = {
   login: async (email, password) => {
     const response = await api.post('/api/auth/login-admin', {
@@ -26,21 +35,39 @@ const authService = {
   },
 
   getCurrentUser: () => {
+    const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!token || !userStr) return null;
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return null;
+    }
+    try {
+      return JSON.parse(userStr);
+    } catch {
+      localStorage.removeItem('user');
+      return null;
+    }
   },
 
   getToken: () => {
-    return localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    if (isTokenExpired(token)) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return null;
+    }
+    return token;
   },
 
   isAuthenticated: () => {
-    const token = localStorage.getItem('token');
-    return !!token;
+    return !!authService.getToken();
   },
 };
 
-// Configurar el token si existe al cargar la aplicación
+// Configurar el token si existe y es válido al cargar la aplicación
 const token = authService.getToken();
 if (token) {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
