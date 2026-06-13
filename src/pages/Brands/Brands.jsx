@@ -123,6 +123,13 @@ const Brands = () => {
       sorter: (a, b) => a.name.localeCompare(b.name), // Ordenar alfabéticamente
     },
     {
+      title: 'Orden',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
+      width: 100,
+      sorter: (a, b) => a.sortOrder - b.sortOrder,
+    },
+    {
       title: 'Logo',
       dataIndex: 'logoUrl',
       key: 'logoUrl',
@@ -205,6 +212,14 @@ const Brands = () => {
             rules={[{ required: true, message: 'Por favor ingrese el nombre de la marca' }]}
           >
             <Input placeholder="Nombre de la marca" />
+          </Form.Item>
+
+          <Form.Item 
+            name="sortOrder"
+            label="Orden"
+            rules={[{ required: true, message: 'Por favor ingrese el orden de visualización de la marca' }]}
+          >
+            <Input placeholder="Orden de visualización de la marca" />
           </Form.Item>
 
           <Form.Item
