@@ -176,6 +176,14 @@ const Categories = () => {
       key: 'slug',
       ...getColumnSearchProps('slug', 'slug'),
     },
+
+    {
+      title: 'Orden',
+      dataIndex: 'sortOrder',
+      key: 'sortOrder',
+      width: 100,
+      sorter: (a, b) => a.sortOrder - b.sortOrder,
+    },
     {
       title: 'Imagen',
       dataIndex: 'image',
@@ -284,6 +292,14 @@ const Categories = () => {
             extra="URL amigable (ej: ropa-deportiva)"
           >
             <Input placeholder="ropa-deportiva" />
+          </Form.Item>
+
+          <Form.Item
+            name="sortOrder"
+            label="Orden"
+            rules={[{ required: true, message: 'Por favor ingrese el orden de la categoría' }]}
+          >
+            <Input placeholder="Orden de la categoría" />
           </Form.Item>
 
           <Form.Item
