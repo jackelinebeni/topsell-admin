@@ -147,7 +147,12 @@ const Products = () => {
           message.success('Producto eliminado exitosamente');
           fetchProducts();
         } catch (error) {
-          message.error('Error al eliminar el producto');
+          if (error.response?.status === 409) {
+            const backendMessage = error.response.data?.message || error.response.data || 'Conflicto al eliminar el producto';
+            message.error(backendMessage);
+          } else {
+            message.error('Error al eliminar el producto');
+          }
           console.error(error);
         }
       },
