@@ -138,6 +138,25 @@ const Banners = () => {
       ),
     },
     {
+      title: 'Imagen Responsive',
+      dataIndex: 'imageUrlMobile',
+      key: 'imageUrlMobile',
+      width: 150,
+      render: (url) => (
+        url ? (
+          <Image
+            src={url}
+            alt="banner mobile"
+            width={64}
+            height={68}
+            style={{ objectFit: 'cover', borderRadius: 4 }}
+          />
+        ) : (
+          <span style={{ color: '#999' }}>Sin imagen</span>
+        )
+      ),
+    },
+    {
       title: 'Orden',
       dataIndex: 'sortOrder',
       key: 'sortOrder',
@@ -232,8 +251,15 @@ const Banners = () => {
 
           <Form.Item
             name="imageUrl"
-            label="Imagen del Banner"
+            label="Imagen del Banner (Desktop)"
             rules={[{ required: true, message: 'Por favor suba una imagen' }]}
+          >
+            <ImageUpload folder="banners" />
+          </Form.Item>
+
+          <Form.Item
+            name="imageUrlMobile"
+            label="Imagen Responsive (Mobile, aprox. 1280x1370px)"
           >
             <ImageUpload folder="banners" />
           </Form.Item>

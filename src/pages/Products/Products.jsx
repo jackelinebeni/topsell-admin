@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+      import { useState, useEffect } from 'react';
 import { Table, Button, Space, Modal, Form, Input, InputNumber, Switch, Select, message, Image } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import productService from '../../services/productService';
@@ -199,6 +199,7 @@ const Products = () => {
         name: values.name,
         slug: values.slug,
         sku: values.sku,
+        longDescription: values.longDescription,
         price: values.price,
         stock: values.stock,
         imageUrl: mainImage,
@@ -435,6 +436,14 @@ const Products = () => {
             rules={[{ required: true, message: 'Por favor ingrese el SKU' }]}
           >
             <Input placeholder="SKU del producto" />
+          </Form.Item>
+
+          <Form.Item
+            name="longDescription"
+            label="Descripción del Producto"
+            rules={[{ required: true, message: 'Por favor ingrese la descripción del producto' }]}
+          >
+            <TextArea rows={4} placeholder="Descripción detallada del producto" />
           </Form.Item>
 
           <Form.Item

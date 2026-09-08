@@ -12,7 +12,13 @@ import Categories from './pages/Categories/Categories';
 import Products from './pages/Products/Products';
 import Users from './pages/Users/Users';
 import Quotes from './pages/Quotes/Quotes';
+import QuotePromo from './pages/QuotePromo/QuotePromo';
 import Contacts from './pages/Contacts/Contacts';
+import Nosotros from './pages/Nosotros/Nosotros';
+import ContactoPage from './pages/ContactoPage/ContactoPage';
+import PoliticaPrivacidad from './pages/PoliticaPrivacidad/PoliticaPrivacidad';
+import TerminosCondiciones from './pages/TerminosCondiciones/TerminosCondiciones';
+import DatosEmpresa from './pages/DatosEmpresa/DatosEmpresa';
 import './App.css';
 
 function App() {
@@ -38,7 +44,13 @@ function App() {
               <Route path="products" element={<Products />} />
               <Route path="users" element={<Users />} />
               <Route path="quotes" element={<Quotes />} />
+              <Route path="quote-promo" element={<QuotePromo />} />
               <Route path="contacts" element={<Contacts />} />
+              <Route path="nosotros" element={<Nosotros />} />
+              <Route path="contacto-page" element={<ContactoPage />} />
+              <Route path="politica-privacidad" element={<PoliticaPrivacidad />} />
+              <Route path="terminos-condiciones" element={<TerminosCondiciones />} />
+              <Route path="datos-empresa" element={<DatosEmpresa />} />
             </Route>
           </Routes>
         </Router>

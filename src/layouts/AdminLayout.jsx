@@ -9,8 +9,12 @@ import {
   UserOutlined,
   FileTextOutlined,
   MailOutlined,
-  LogoutOutlined
-} from '@ant-design/icons';
+  LogoutOutlined,  TeamOutlined,
+  PhoneOutlined,
+  SafetyCertificateOutlined,
+  FileProtectOutlined,
+  GiftOutlined,
+  BankOutlined,} from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth';
 import './AdminLayout.css';
 
@@ -72,13 +76,54 @@ const AdminLayout = () => {
       label: <Link to="/quotes" style={{ fontSize: '20px' }}>Cotizaciones</Link>,
     },
     {
+      key: '/quote-promo',
+      icon: <GiftOutlined style={{ fontSize: '18px' }} />,
+      label: <Link to="/quote-promo" style={{ fontSize: '20px' }}>Promoción de correo</Link>,
+    },
+    {
       key: '/contacts',
       icon: <MailOutlined style={{ fontSize: '18px' }} />,
       label: <Link to="/contacts" style={{ fontSize: '20px' }}>Contactos</Link>,
     },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'pages-group',
+      label: <span style={{ fontSize: '13px', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Páginas del sitio</span>,
+      type: 'group',
+      children: [
+        {
+          key: '/nosotros',
+          icon: <TeamOutlined style={{ fontSize: '18px' }} />,
+          label: <Link to="/nosotros" style={{ fontSize: '20px' }}>Nosotros</Link>,
+        },
+        {
+          key: '/contacto-page',
+          icon: <PhoneOutlined style={{ fontSize: '18px' }} />,
+          label: <Link to="/contacto-page" style={{ fontSize: '20px' }}>Contacto (página)</Link>,
+        },
+        {
+          key: '/politica-privacidad',
+          icon: <SafetyCertificateOutlined style={{ fontSize: '18px' }} />,
+          label: <Link to="/politica-privacidad" style={{ fontSize: '20px' }}>Política de Privacidad</Link>,
+        },
+        {
+          key: '/terminos-condiciones',
+          icon: <FileProtectOutlined style={{ fontSize: '18px' }} />,
+          label: <Link to="/terminos-condiciones" style={{ fontSize: '20px' }}>Términos y Condiciones</Link>,
+        },
+        {
+          key: '/datos-empresa',
+          icon: <BankOutlined style={{ fontSize: '18px' }} />,
+          label: <Link to="/datos-empresa" style={{ fontSize: '20px' }}>Datos de Empresa</Link>,
+        },
+      ],
+    },
   ];
 
-  const selectedKey = menuItems.find(item => location.pathname.startsWith(item.key))?.key || '/dashboard';
+  const allMenuItems = menuItems.flatMap(item => item.children ?? [item]);
+  const selectedKey = allMenuItems.find(item => item.key && location.pathname.startsWith(item.key))?.key || '/dashboard';
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
