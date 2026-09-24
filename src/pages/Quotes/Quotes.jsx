@@ -125,6 +125,12 @@ const Quotes = () => {
       ...getColumnSearchProps('userEmail', 'email'),
     },
     {
+      title: 'Teléfono',
+      dataIndex: 'userPhone',
+      key: 'userPhone',
+      ...getColumnSearchProps('userPhone', 'teléfono'),
+    },
+    {
       title: 'Total',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
